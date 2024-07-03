@@ -1,22 +1,7 @@
-// #include <stdio.h>
-//
-// #define PROJECT_NAME "serial_parser"
-//
-// int main(int argc, char **argv) {
-//     if(argc != 1) {
-//         printf("%s takes no arguments.\n", argv[0]);
-//         return 1;
-//     }
-//     printf("This is project %s.\n", PROJECT_NAME);
-//     return 0;
-// }
-
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
-// #include <iterator>
 #include <vector>
-#define TERMINAL    "/dev/ttyACM0"
 
 #include <errno.h>
 #include <fcntl.h> 
@@ -25,9 +10,10 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
-// #include <iostream>
 
 #include "SimpleFOCRegisters.hpp"
+
+#define TERMINAL    "/dev/ttyACM0"
 
 /* define local struct for tty
  * load state into that struct
