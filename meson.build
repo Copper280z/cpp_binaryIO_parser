@@ -1,10 +1,8 @@
 project('serial_parser', 'cpp',
   version : '0.1',
-  default_options : ['warning_level=3'])
+  default_options : ['warning_level=3', 'cpp_std=c++20'])
 
-add_project_arguments('-g', language : 'cpp')
 add_project_arguments('-ggdb', language : 'cpp')
-add_project_arguments('-Dcpp_std=c++17', language : 'cpp')
 
 includes = []
 sources = []

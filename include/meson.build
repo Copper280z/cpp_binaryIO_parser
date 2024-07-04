@@ -1,1 +1,3 @@
-includes += files('SimpleFOCRegisters.hpp')
+includes += files('SimpleFOCRegisters.hpp', 
+                  'Parse.hpp')
+
