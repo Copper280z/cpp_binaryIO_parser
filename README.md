@@ -18,3 +18,7 @@ Ubuntu:
 ```bash
 sudo apt install meson ninja-build
 ```
+MacOS with Homebrew:
+```bash
+brew install meson ninja
+```
