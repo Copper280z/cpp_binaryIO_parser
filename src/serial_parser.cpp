@@ -10,11 +10,14 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <algorithm>
 
 #include "SimpleFOCRegisters.hpp"
 #include "Parse.hpp"
 
 #define TERMINAL    "/dev/cu.usbmodem2086308E484E1"
+
+using namespace std;
 
 class InputParser{
     public:

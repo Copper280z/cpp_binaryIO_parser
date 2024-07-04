@@ -1,6 +1,9 @@
 #include "Parse.hpp"
 #include <cstdint>
+#include <cstring>
+#include <stdio.h>
 
+using namespace std;
 
 Sample::Sample(int size) {
     operands.reserve(size);
