@@ -1,4 +1,4 @@
-Serial port is hard coded as /dev/ttyACM0 at top of serial_parser.cpp for the moment
+Serial port can be specified with the -p flag at runtime, default is /dev/ttyACM0
 
 Registers are also hard coded as:
 ```cpp
