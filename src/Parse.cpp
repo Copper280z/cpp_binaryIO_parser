@@ -56,16 +56,6 @@ ParseResult BinaryIOParser::parse_frame(std::vector<uint8_t> buffer, Sample &sam
 
     uint8_t frame_length = buffer[1];
 
-    if ((telem_conf.total_bytes+2) != frame_length) {
-        printf("Frame length not equal to config: %lu - %u\n", telem_conf.total_bytes+2, frame_length);
-        uint32_t bytes_used = search_for_marker(buffer);
-
-        ret.success=false; 
-        ret.status=ParseResult::CONF_MISMATCH;
-        ret.bytes_used=bytes_used;
-        return ret;
-    }
-
     if ((frame_length + (size_t) 2) > buffer.size()) {
         // printf("Frame longer than buffer\n");
         ret.success=false; 
@@ -75,18 +65,34 @@ ParseResult BinaryIOParser::parse_frame(std::vector<uint8_t> buffer, Sample &sam
     }
 
     uint8_t frame_type = buffer[2];
-    uint8_t motor_addr = buffer[3];
-    (void) motor_addr;
-    
+    uint8_t address = buffer[3];
 
     uint32_t bytes_used = 0;
     switch (frame_type) {
         case FrameType::TELEMETRY:
+            if ((telem_conf.total_bytes+2) != frame_length) {
+                printf("Frame length not equal to config: %lu - %u\n", telem_conf.total_bytes+2, frame_length);
+                uint32_t bytes_used = search_for_marker(buffer);
+
+                ret.success=false; 
+                ret.status=ParseResult::CONF_MISMATCH;
+                ret.frame_type = FrameType::TELEMETRY;
+                ret.bytes_used=bytes_used;
+                return ret;
+            }
             bytes_used = parse_telemetry_frame(buffer, sample, 4);
+            sample.address=address;
             break;
         case FrameType::REGISTER:
-        case FrameType::RESPONSE:
+            bytes_used = parse_register_frame(buffer, sample, 4);
+            ret.frame_type = FrameType::REGISTER;
+            sample.address=address;
+            break;
         case FrameType::HEADER:
+            ret.frame_type = FrameType::HEADER;
+            bytes_used = parse_header_frame(buffer, 4);
+            break;
+        case FrameType::RESPONSE:
         case FrameType::SYNC:
         case FrameType::ALERT:
         default:
@@ -104,9 +110,53 @@ ParseResult BinaryIOParser::parse_frame(std::vector<uint8_t> buffer, Sample &sam
     return ret;
 }
 
-uint8_t parse_register_frame(std::vector<uint8_t> const buffer, Sample &sample, uint8_t start_idx);
-uint8_t parse_response_frame(std::vector<uint8_t> const buffer, Sample &sample, uint8_t start_idx);
-uint8_t parse_header_frame(std::vector<uint8_t> const buffer, Sample &sample, uint8_t start_idx);
+uint8_t BinaryIOParser::parse_register_frame(std::vector<uint8_t> const buffer, Sample &sample, uint8_t start_idx) {
+
+    uint8_t reg = buffer[3];
+    uint8_t idx = start_idx;
+    auto reg_size = regs->sizeOfRegister(reg);
+    uint8_t reg_type = regs->typeOfRegister(reg);
+    sample.num+=1;
+    Number val;
+    val.reg = reg;
+
+    val.type = reg_type;
+    // array telemetry regs are not currently handled
+    if (reg_size <= 4) { 
+        switch(reg_type)
+        {
+            case RegType::FLOAT:
+                memcpy(&val.f, &buffer[idx], reg_size);
+                break;
+            case RegType::UINT32:
+                memcpy(&val.u32, &buffer[idx], reg_size);
+                break;
+            case RegType::INT32:
+                memcpy(&val.i32, &buffer[idx], reg_size);
+                break;
+            case RegType::UINT8:
+                memcpy(&val.u8, &buffer[idx], reg_size);
+                break;
+        }
+    }
+    idx+=reg_size;
+    sample.operands.push_back(val);
+    return idx;
+}
+// uint8_t BinaryIOParser::parse_response_frame(std::vector<uint8_t> const buffer, Sample &sample, uint8_t start_idx);
+uint8_t BinaryIOParser::parse_header_frame(std::vector<uint8_t> const buffer, uint8_t start_idx) {
+    telem_conf.operand_motors.clear();
+    telem_conf.operand_registers.clear();
+    telem_conf.num_operands=0;
+    uint8_t idx = start_idx;
+    for (size_t i=start_idx;i<buffer.size()-start_idx; i+=2) {
+        telem_conf.operand_motors.push_back(buffer[i]);
+        telem_conf.operand_registers.push_back(buffer[i+1]); // should guard against OOB read explicitly
+        telem_conf.num_operands+=1; 
+        idx+=2;
+    }
+    return idx;
+}
 uint8_t parse_sync_frame(std::vector<uint8_t> const buffer, Sample &sample, uint8_t start_idx);
 uint8_t parse_alert_frame(std::vector<uint8_t> const buffer, Sample &sample, uint8_t start_idx);
 

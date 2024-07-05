@@ -15,7 +15,7 @@
 #include "SimpleFOCRegisters.hpp"
 #include "Parse.hpp"
 
-#define TERMINAL    "/dev/cu.usbmodem2086308E484E1"
+#define TERMINAL    "/dev/ttyACM0"
 
 using namespace std;
 
@@ -190,15 +190,17 @@ int main(int argc, char **argv)
                 parse_result = parser.parse_frame(bytes_to_parse, sample);
                 
                 if (parse_result.bytes_used != 0) {
+                    // this is sloppy and inefficient because vectors aren't meant to be used this way
                     bytes_to_parse.erase(bytes_to_parse.begin(),bytes_to_parse.begin()+parse_result.bytes_used);
                 }
 
-                auto et = std::chrono::duration_cast<ms>(t1-t0).count();
+                long long et; // = std::chrono::duration_cast<ms>(t1-t0).count();
     
                 // I'm not sure I like using continue inside the switch
                 switch (parse_result.status) {
                     case ParseResult::SUCCESS:
 
+                        et = std::chrono::duration_cast<ms>(t1-t0).count();
                         t1 = Time::now();
                         if ( et >= 100) {
                             fps = (float)frame_counter/((float)et/1000);
