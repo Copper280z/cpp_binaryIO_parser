@@ -12,8 +12,21 @@ subdir('include')
 
 incdirs = include_directories('include')
 
-exe = executable('serial_parser', sources,
+exe = executable('serial_parser', sources+'src/main.cpp',
   include_directories : incdirs,
   install : true)
 
 test('basic', exe)
+
+#################################################################
+
+subproject('pybind11')
+
+py = import('python').find_installation(pure: false)
+pybind11_dep = dependency('pybind11')
+
+py_lib_deps = [pybind11_dep]
+
+py.extension_module('pylib',sources+'src/pylib.cpp',
+  include_directories : incdirs,
+  dependencies : py_lib_deps)

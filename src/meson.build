@@ -1,3 +1,2 @@
-sources += files('serial_parser.cpp', 
-                 'SimpleFOCRegisters.cpp', 
+sources += files('SimpleFOCRegisters.cpp', 
                  'Parse.cpp')

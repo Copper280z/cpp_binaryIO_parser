@@ -1,3 +1,4 @@
 includes += files('SimpleFOCRegisters.hpp', 
-                  'Parse.hpp')
+                  'Parse.hpp',
+                  'pylib.hpp')
 

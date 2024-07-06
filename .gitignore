@@ -13,6 +13,9 @@ __pycache__
 /install dir
 /work area
 
+/subprojects/*
+!/subprojects/*.wrap
+
 /meson-test-run.txt
 /meson-test-run.xml
 /meson-cross-test-run.txt
