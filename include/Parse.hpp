@@ -30,12 +30,13 @@ class Sample {
 
 class TelemetryConfig {
     public:
+        TelemetryConfig(SimpleFOCRegisters * const _regs);
+
         uint8_t num_operands=0;
         std::vector<uint8_t> operand_motors;
         std::vector<uint8_t> operand_registers;
         size_t total_bytes=0;
 
-        TelemetryConfig(SimpleFOCRegisters * const _regs);
         void update_total();
     private:
         SimpleFOCRegisters * const regs;
@@ -52,7 +53,7 @@ class ParseResult {
 class BinaryIOParser {
     public:
         SimpleFOCRegisters * const regs;
-        TelemetryConfig telem_conf;
+        TelemetryConfig &telem_conf;
         BinaryIOParser(SimpleFOCRegisters * const _regs, TelemetryConfig &_telem_conf);
         ParseResult parse_frame(std::vector<uint8_t> buffer, Sample &sample);
 

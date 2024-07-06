@@ -12,7 +12,7 @@ subdir('include')
 
 incdirs = include_directories('include')
 
-exe = executable('serial_parser', sources+'src/main.cpp',
+exe = executable('serial_parser', sources+'src/binary_parse.cpp',
   include_directories : incdirs,
   install : true)
 

@@ -8,7 +8,7 @@ SimpleFOCRegisters::SimpleFOCRegisters(){};
 SimpleFOCRegisters::~SimpleFOCRegisters(){};
 
 // return the size of the register values, when output to comms, in bytes
-uint8_t SimpleFOCRegisters::sizeOfRegister(uint8_t reg){
+uint8_t SimpleFOCRegisters::sizeOfRegister(uint8_t reg) const {
     switch (reg) {
         case SimpleFOCRegister::REG_TARGET:
         case SimpleFOCRegister::REG_ANGLE:
@@ -99,7 +99,7 @@ uint8_t SimpleFOCRegisters::sizeOfRegister(uint8_t reg){
     }
 };
 
-uint8_t SimpleFOCRegisters::typeOfRegister(uint8_t reg){
+uint8_t SimpleFOCRegisters::typeOfRegister(uint8_t reg) const {
     switch (reg) {
         case SimpleFOCRegister::REG_TARGET:
         case SimpleFOCRegister::REG_ANGLE:

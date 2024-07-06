@@ -1,6 +1,12 @@
+#include "SFOCInterface.hpp"
+#include "Parse.hpp"
+#include "SimpleFOCRegisters.hpp"
+
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <thread>
+#include <utility>
 #include <vector>
 
 #include <errno.h>
@@ -10,46 +16,13 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
-#include <algorithm>
 
-#include "SimpleFOCRegisters.hpp"
-#include "Parse.hpp"
-#include "SFOCInterface.hpp"
-
-#define TERMINAL    "/dev/ttyACM0"
-
-using namespace std;
-
-class InputParser{
-    public:
-        InputParser (int &argc, char **argv){
-            for (int i=1; i < argc; ++i)
-                this->tokens.push_back(std::string(argv[i]));
-        }
-        /// @author iain
-        const std::string& getCmdOption(const std::string &option) const{
-            std::vector<std::string>::const_iterator itr;
-            itr =  std::find(this->tokens.begin(), this->tokens.end(), option);
-            if (itr != this->tokens.end() && ++itr != this->tokens.end()){
-                return *itr;
-            }
-            static const std::string empty_string("");
-            return empty_string;
-        }
-        /// @author iain
-        bool cmdOptionExists(const std::string &option) const{
-            return std::find(this->tokens.begin(), this->tokens.end(), option)
-                   != this->tokens.end();
-        }
-    private:
-        std::vector <std::string> tokens;
-};
 
 /* define local struct for tty
  * load state into that struct
  * do stuff to it
  * set the state of the tty from the struct */
-int set_interface_attribs(int fd, int speed)
+static int set_interface_attribs(int fd, int speed)
 {
     struct termios tty;
 
@@ -84,18 +57,11 @@ int set_interface_attribs(int fd, int speed)
     return 0;
 }
 
-// sync len  type  id   [1   2   3   4]   [1    2    3    4]    [1    2    3    4]    [1    2    3    4]    [1    2    3    4]
-// 0xa5 0x16 0x54 0x0   0x0 0x0 0x0 0x0   0xd9 0xa0 0xd5 0xbc   0x11 0x99 0x10 0xc0   0xb4 0x9a 0x81 0x3c   0x52 0xa1 0x11 0x3c
-// 0xa5 0x16 0x54 0x0   0x0 0x0 0x0 0x0   0x6a 0xfd 0xba 0x3e   0x2b 0xe4 0xe4 0x41   0xb1 0x3c 0xbd 0xbe   0x31 0x77 0x62 0xbc
-// 0xa5 0x16 0x54 0x0   0x0 0x0 0x0 0x0   0x80 0xdb 0xbb 0x3e   0x17 0x99 0xe1 0x41   0x40 0x47 0xb6 0xbe   0x5c 0xc4 0x5c 0xbb
-SimpleFOCRegisters regs = SimpleFOCRegisters();
-
-
-void print_ops(Sample * const sample) {
+static void print_ops(Sample * const sample) {
     
     for (auto num : sample->operands) {
         
-        uint8_t reg_type = regs.typeOfRegister(num.reg);
+        uint8_t reg_type = SimpleFOCRegisters::regs->typeOfRegister(num.reg);
     
         switch(reg_type)
         {
@@ -117,68 +83,47 @@ void print_ops(Sample * const sample) {
     printf("\n");
 } // print_ops
 
+SFOC::SFOC(ParseType parse_type) : regs(SimpleFOCRegisters()) {
+    (void) parse_type; // do something with this when relevant
+    telem_conf = new TelemetryConfig(&regs);
+    parser = new BinaryIOParser(&regs, *telem_conf);
+}
 
-
-
-int main(int argc, char **argv)
-{
-    std::string portname(TERMINAL);
-
-    // TODO - take args maybe, if this stays an executable
-    InputParser input(argc, argv);
-    if(input.cmdOptionExists("-h")){
-        printf("Usage: \n");
-        printf("-p SERIAL_PORT - ie /dev/ttyACM0 or /dev/cu.usbmodem[...]\n");
-    }
-    const std::string &port = input.getCmdOption("-p");
-    if (!port.empty()){
-        portname = port.c_str();
-    }
+int SFOC::run_serial(int serial_fd) {
 
     typedef std::chrono::high_resolution_clock Time;
     typedef std::chrono::milliseconds ms;
     auto t0 = Time::now();
     auto t1 = Time::now();
 
-    // open and configure the serial port
-    int fd;
-
-    fd = open(portname.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
-    if (fd < 0) {
-        printf("Error opening %s: %s\n", portname.c_str(), strerror(errno));
-        return -1;
-    }
-
-    /*baudrate 115200, 8 bits, no parity, 1 stop bit */
-    // baud doesn't matter because using USB right now
-    set_interface_attribs(fd, B115200);
 
     // instance and manually set the telemetry configuration
     // TODO - ask the device for it's config and set this from that
-    TelemetryConfig telem_conf(&regs);
+    // ask for header frame 
+    // send 2 sync frames
 
-    telem_conf.num_operands = 5;
-    telem_conf.operand_registers.push_back(SimpleFOCRegister::REG_TARGET);
-    telem_conf.operand_registers.push_back(SimpleFOCRegister::REG_ANGLE);
-    telem_conf.operand_registers.push_back(SimpleFOCRegister::REG_VELOCITY);
-    telem_conf.operand_registers.push_back(SimpleFOCRegister::REG_CURRENT_Q);
-    telem_conf.operand_registers.push_back(SimpleFOCRegister::REG_CURRENT_D);
-    telem_conf.update_total();
+    telem_conf->num_operands = 5;
+    telem_conf->operand_registers.push_back(SimpleFOCRegister::REG_TARGET);
+    telem_conf->operand_registers.push_back(SimpleFOCRegister::REG_ANGLE);
+    telem_conf->operand_registers.push_back(SimpleFOCRegister::REG_VELOCITY);
+    telem_conf->operand_registers.push_back(SimpleFOCRegister::REG_CURRENT_Q);
+    telem_conf->operand_registers.push_back(SimpleFOCRegister::REG_CURRENT_D);
+    telem_conf->update_total();
 
     // setup some stuff to use in the main loop
     std::vector<uint8_t> bytes_to_parse;
     float fps=0; 
     size_t frame_counter = 0;
-    Sample sample(telem_conf.num_operands);
+    Sample sample(telem_conf->num_operands);
     ParseResult parse_result;
     
-    BinaryIOParser parser(&regs, telem_conf);
+    // BinaryIOParser parser(&regs, telem_conf);
 
     do {
         uint8_t read_buf[512];
         int rdlen;
 
-        rdlen = read(fd, read_buf, sizeof(read_buf) - 1);
+        rdlen = read(serial_fd, read_buf, sizeof(read_buf) - 1);
         if (rdlen > 0) 
         { // we have some data to work with
             // put all the bytes from the read buffer into the end of the parse buffer
@@ -188,7 +133,7 @@ int main(int argc, char **argv)
                 sample.clear();
 
                 // try to parse a frame
-                parse_result = parser.parse_frame(bytes_to_parse, sample);
+                parse_result = parser->parse_frame(bytes_to_parse, sample);
                 
                 if (parse_result.bytes_used != 0) {
                     // this is sloppy and inefficient because vectors aren't meant to be used this way
@@ -230,5 +175,36 @@ int main(int argc, char **argv)
             printf("Timeout from read\n");
         }
 
-    } while (1);
+    } while (run_thread);
+    return 0;
+}
+
+int SFOC::connect(std::string port) {
+
+    // open and configure the serial port
+    int fd;
+    fd = open(port.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
+    if (fd < 0) {
+        printf("Error opening %s: %s\n", port.c_str(), strerror(errno));
+        return -1;
+    }
+
+    /*baudrate 115200, 8 bits, no parity, 1 stop bit */
+    // baud doesn't matter because using USB right now
+    set_interface_attribs(fd, B115200);
+
+    std::thread t1(&SFOC::run_serial, this, fd);
+
+    active_threads.push_back(std::move(t1));
+    
+    return 0;
+}
+
+int SFOC::disconnect() {
+    run_thread = false;
+    for (auto &t : active_threads) {
+        t.join();
+    }
+    active_threads.clear();
+    return 0;
 }

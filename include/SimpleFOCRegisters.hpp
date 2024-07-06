@@ -122,8 +122,8 @@ class SimpleFOCRegisters {
 public:
     SimpleFOCRegisters();
     virtual ~SimpleFOCRegisters();
-    virtual uint8_t sizeOfRegister(uint8_t reg);
-    virtual uint8_t typeOfRegister(uint8_t reg);
+    virtual uint8_t sizeOfRegister(uint8_t reg) const;
+    virtual uint8_t typeOfRegister(uint8_t reg) const;
     // virtual bool  
     // virtual bool registerToComms(RegisterIO& comms, uint8_t reg, FOCMotor* motor);
     // virtual bool commsToRegister(RegisterIO& comms, uint8_t reg, FOCMotor* motor);

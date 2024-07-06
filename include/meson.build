@@ -1,4 +1,5 @@
 includes += files('SimpleFOCRegisters.hpp', 
                   'Parse.hpp',
-                  'pylib.hpp')
+                  'pylib.hpp',
+                  'ThreadSafeQueue.hpp')
 

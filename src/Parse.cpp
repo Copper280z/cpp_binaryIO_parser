@@ -27,6 +27,7 @@ void TelemetryConfig::update_total() {
 static uint32_t search_for_marker(std::vector<uint8_t> buffer) {
     // skip the first byte in case we got here from a path that had a valid
     // sync byte but still needs to skip this frame and go to the next one
+    // -the first byte is never an acceptable place for the next marker to be
     for (size_t idx=1; idx<buffer.size(); idx++) {
         uint8_t byte = buffer[idx];
         if (byte == MARKER_BYTE) {
@@ -39,7 +40,7 @@ static uint32_t search_for_marker(std::vector<uint8_t> buffer) {
 BinaryIOParser::BinaryIOParser(SimpleFOCRegisters * const _regs, TelemetryConfig &_telem_conf) :
     regs(_regs), telem_conf(_telem_conf) {};
 
-ParseResult BinaryIOParser::parse_frame(std::vector<uint8_t> buffer, Sample &sample) {
+ParseResult BinaryIOParser::parse_frame(const std::vector<uint8_t> buffer, Sample &sample) {
     ParseResult ret;
 
     uint8_t byte = buffer[0];

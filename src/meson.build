@@ -1,2 +1,3 @@
 sources += files('SimpleFOCRegisters.cpp', 
-                 'Parse.cpp')
+                 'Parse.cpp',
+                 'SFOCInterface.cpp')
