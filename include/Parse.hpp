@@ -56,6 +56,7 @@ class BinaryIOParser {
         TelemetryConfig &telem_conf;
         BinaryIOParser(SimpleFOCRegisters * const _regs, TelemetryConfig &_telem_conf);
         ParseResult parse_frame(std::vector<uint8_t> buffer, Sample &sample);
+        std::vector<uint8_t> encode_frame(Sample sample);
 
     private:
         uint8_t parse_telemetry_frame(std::vector<uint8_t> const buffer, Sample &sample, uint8_t start_idx);

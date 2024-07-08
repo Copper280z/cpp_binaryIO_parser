@@ -195,3 +195,9 @@ uint8_t BinaryIOParser::parse_telemetry_frame(std::vector<uint8_t> const buffer,
     }
     return idx;
 };
+
+std::vector<uint8_t> encode_frame(Sample sample) {
+    std::vector<uint8_t> ret;
+    ret.push_back(MARKER_BYTE);
+
+}

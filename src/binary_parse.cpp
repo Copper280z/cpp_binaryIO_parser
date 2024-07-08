@@ -93,7 +93,6 @@ int main(int argc, char **argv)
 {
     std::string portname(TERMINAL);
 
-    // TODO - take args maybe, if this stays an executable
     InputParser input(argc, argv);
     if(input.cmdOptionExists("-h")){
         printf("Usage: \n");
