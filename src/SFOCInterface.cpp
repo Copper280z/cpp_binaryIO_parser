@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -119,11 +120,55 @@ int SFOC::run_serial(int serial_fd) {
     
     // BinaryIOParser parser(&regs, telem_conf);
 
+    std::vector<uint8_t> write_buf;
+    write_buf.reserve(512);
     do {
+        
+        size_t samples_to_write = write_queue.get_length();
+        // printf("have %lu samples to send!\n", samples_to_write);
+        for (size_t i=0;i<samples_to_write;i++) {
+            auto write_sample = write_queue.dequeue(); // shouldn't block because we just checked that there was something to dequeue
+            auto bytes = parser->encode_frame(write_sample);
+            if (bytes.size() != 0) {
+                write_buf.insert(
+                        write_buf.end(),
+                        std::make_move_iterator(bytes.begin()),
+                        std::make_move_iterator(bytes.end())
+                        );
+            }
+        }
+        // printf("encoded samples and wrote to send buffer\n");
+
+        size_t write_len = 0;
+        // printf("have %lu bytes to send!\n", write_buf.size());
+        size_t bytes_to_write = write_buf.size();
+        if (bytes_to_write > 0) {
+            while (write_len != bytes_to_write) {
+                // printf("starting serial write\n");
+                write_len = write(serial_fd, &write_buf[0], write_buf.size());
+                printf("wrote %lu bytes on the wire\n",write_len);
+                if (write_len == write_buf.size()) {
+                    write_buf.clear();
+                    // printf("cleared write buffer\n");
+                } else {
+                    printf("didn't write all the bytes to the serial port!\n");
+                    // printf("starting to remove bytes from buffer\n");
+
+                    write_buf.erase(
+                            write_buf.begin(),
+                            write_buf.begin()+write_len);
+
+                    // printf("removed bytes from buffer\n");
+                }
+            }
+        }
+
+
+        // printf("starting read from serial port\n");
         uint8_t read_buf[512];
         int rdlen;
-
         rdlen = read(serial_fd, read_buf, sizeof(read_buf) - 1);
+        // printf("read from serial port\n");
         if (rdlen > 0) 
         { // we have some data to work with
             // put all the bytes from the read buffer into the end of the parse buffer
@@ -206,5 +251,10 @@ int SFOC::disconnect() {
         t.join();
     }
     active_threads.clear();
+    return 0;
+}
+
+int SFOC::send_frame(Sample sample) {
+    write_queue.enqueue(sample);
     return 0;
 }
