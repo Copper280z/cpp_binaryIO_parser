@@ -1,0 +1,50 @@
+[
+  {
+    "directory": "/home/bob/motor_control/cpp_serial/build",
+    "command": "g++-12 -Iserial_parser.p -I. -I.. -Iinclude -I../include -fdiagnostics-color=always -D_GLIBCXX_ASSERTIONS=1 -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -Wpedantic -std=c++23 -O0 -g -ggdb -MD -MQ serial_parser.p/src_SimpleFOCRegisters.cpp.o -MF serial_parser.p/src_SimpleFOCRegisters.cpp.o.d -o serial_parser.p/src_SimpleFOCRegisters.cpp.o -c ../src/SimpleFOCRegisters.cpp",
+    "file": "../src/SimpleFOCRegisters.cpp",
+    "output": "serial_parser.p/src_SimpleFOCRegisters.cpp.o"
+  },
+  {
+    "directory": "/home/bob/motor_control/cpp_serial/build",
+    "command": "g++-12 -Iserial_parser.p -I. -I.. -Iinclude -I../include -fdiagnostics-color=always -D_GLIBCXX_ASSERTIONS=1 -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -Wpedantic -std=c++23 -O0 -g -ggdb -MD -MQ serial_parser.p/src_Parse.cpp.o -MF serial_parser.p/src_Parse.cpp.o.d -o serial_parser.p/src_Parse.cpp.o -c ../src/Parse.cpp",
+    "file": "../src/Parse.cpp",
+    "output": "serial_parser.p/src_Parse.cpp.o"
+  },
+  {
+    "directory": "/home/bob/motor_control/cpp_serial/build",
+    "command": "g++-12 -Iserial_parser.p -I. -I.. -Iinclude -I../include -fdiagnostics-color=always -D_GLIBCXX_ASSERTIONS=1 -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -Wpedantic -std=c++23 -O0 -g -ggdb -MD -MQ serial_parser.p/src_SFOCInterface.cpp.o -MF serial_parser.p/src_SFOCInterface.cpp.o.d -o serial_parser.p/src_SFOCInterface.cpp.o -c ../src/SFOCInterface.cpp",
+    "file": "../src/SFOCInterface.cpp",
+    "output": "serial_parser.p/src_SFOCInterface.cpp.o"
+  },
+  {
+    "directory": "/home/bob/motor_control/cpp_serial/build",
+    "command": "g++-12 -Iserial_parser.p -I. -I.. -Iinclude -I../include -fdiagnostics-color=always -D_GLIBCXX_ASSERTIONS=1 -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -Wpedantic -std=c++23 -O0 -g -ggdb -MD -MQ serial_parser.p/src_binary_parse.cpp.o -MF serial_parser.p/src_binary_parse.cpp.o.d -o serial_parser.p/src_binary_parse.cpp.o -c ../src/binary_parse.cpp",
+    "file": "../src/binary_parse.cpp",
+    "output": "serial_parser.p/src_binary_parse.cpp.o"
+  },
+  {
+    "directory": "/home/bob/motor_control/cpp_serial/build",
+    "command": "g++-12 -Ipylib.cpython-310-x86_64-linux-gnu.so.p -I. -I.. -Iinclude -I../include -I../subprojects/pybind11-2.13.1/include -I/usr/include/python3.10 -I/usr/include/x86_64-linux-gnu/python3.10 -fvisibility=hidden -fvisibility-inlines-hidden -fdiagnostics-color=always -D_GLIBCXX_ASSERTIONS=1 -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -Wpedantic -std=c++23 -O0 -g -ggdb -fPIC -MD -MQ pylib.cpython-310-x86_64-linux-gnu.so.p/src_SimpleFOCRegisters.cpp.o -MF pylib.cpython-310-x86_64-linux-gnu.so.p/src_SimpleFOCRegisters.cpp.o.d -o pylib.cpython-310-x86_64-linux-gnu.so.p/src_SimpleFOCRegisters.cpp.o -c ../src/SimpleFOCRegisters.cpp",
+    "file": "../src/SimpleFOCRegisters.cpp",
+    "output": "pylib.cpython-310-x86_64-linux-gnu.so.p/src_SimpleFOCRegisters.cpp.o"
+  },
+  {
+    "directory": "/home/bob/motor_control/cpp_serial/build",
+    "command": "g++-12 -Ipylib.cpython-310-x86_64-linux-gnu.so.p -I. -I.. -Iinclude -I../include -I../subprojects/pybind11-2.13.1/include -I/usr/include/python3.10 -I/usr/include/x86_64-linux-gnu/python3.10 -fvisibility=hidden -fvisibility-inlines-hidden -fdiagnostics-color=always -D_GLIBCXX_ASSERTIONS=1 -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -Wpedantic -std=c++23 -O0 -g -ggdb -fPIC -MD -MQ pylib.cpython-310-x86_64-linux-gnu.so.p/src_Parse.cpp.o -MF pylib.cpython-310-x86_64-linux-gnu.so.p/src_Parse.cpp.o.d -o pylib.cpython-310-x86_64-linux-gnu.so.p/src_Parse.cpp.o -c ../src/Parse.cpp",
+    "file": "../src/Parse.cpp",
+    "output": "pylib.cpython-310-x86_64-linux-gnu.so.p/src_Parse.cpp.o"
+  },
+  {
+    "directory": "/home/bob/motor_control/cpp_serial/build",
+    "command": "g++-12 -Ipylib.cpython-310-x86_64-linux-gnu.so.p -I. -I.. -Iinclude -I../include -I../subprojects/pybind11-2.13.1/include -I/usr/include/python3.10 -I/usr/include/x86_64-linux-gnu/python3.10 -fvisibility=hidden -fvisibility-inlines-hidden -fdiagnostics-color=always -D_GLIBCXX_ASSERTIONS=1 -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -Wpedantic -std=c++23 -O0 -g -ggdb -fPIC -MD -MQ pylib.cpython-310-x86_64-linux-gnu.so.p/src_SFOCInterface.cpp.o -MF pylib.cpython-310-x86_64-linux-gnu.so.p/src_SFOCInterface.cpp.o.d -o pylib.cpython-310-x86_64-linux-gnu.so.p/src_SFOCInterface.cpp.o -c ../src/SFOCInterface.cpp",
+    "file": "../src/SFOCInterface.cpp",
+    "output": "pylib.cpython-310-x86_64-linux-gnu.so.p/src_SFOCInterface.cpp.o"
+  },
+  {
+    "directory": "/home/bob/motor_control/cpp_serial/build",
+    "command": "g++-12 -Ipylib.cpython-310-x86_64-linux-gnu.so.p -I. -I.. -Iinclude -I../include -I../subprojects/pybind11-2.13.1/include -I/usr/include/python3.10 -I/usr/include/x86_64-linux-gnu/python3.10 -fvisibility=hidden -fvisibility-inlines-hidden -fdiagnostics-color=always -D_GLIBCXX_ASSERTIONS=1 -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -Wpedantic -std=c++23 -O0 -g -ggdb -fPIC -MD -MQ pylib.cpython-310-x86_64-linux-gnu.so.p/src_pylib.cpp.o -MF pylib.cpython-310-x86_64-linux-gnu.so.p/src_pylib.cpp.o.d -o pylib.cpython-310-x86_64-linux-gnu.so.p/src_pylib.cpp.o -c ../src/pylib.cpp",
+    "file": "../src/pylib.cpp",
+    "output": "pylib.cpython-310-x86_64-linux-gnu.so.p/src_pylib.cpp.o"
+  }
+]

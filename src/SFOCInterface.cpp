@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <memory>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -118,6 +119,7 @@ int SFOC::run_serial(int serial_fd) {
     Sample sample(telem_conf->num_operands);
     ParseResult parse_result;
     
+    std::vector<std::unique_ptr<DataReq>> requests_to_service;
     // BinaryIOParser parser(&regs, telem_conf);
 
     std::vector<uint8_t> write_buf;
@@ -163,6 +165,13 @@ int SFOC::run_serial(int serial_fd) {
             }
         }
 
+        // get requests out of the incoming queue
+        while (request_queue.get_length() > 0) {
+            auto req = request_queue.try_dequeue();
+            if (req) {
+                requests_to_service.push_back(std::move(req));
+            }
+        }
 
         // printf("starting read from serial port\n");
         uint8_t read_buf[512];
@@ -195,12 +204,39 @@ int SFOC::run_serial(int serial_fd) {
                         t1 = Time::now();
                         if ( et >= 100) {
                             fps = (float)frame_counter/((float)et/1000);
-                            printf("got %.3f frames per sec\n", fps);
-                            print_ops(&sample);
+                            // printf("got %.3f frames per sec\n", fps);
+                            (void) fps;
+                            // print_ops(&sample);
                             t0=t1;
                             frame_counter = 0;
                         } // if (et ..... timer for prints
                         frame_counter+=1;
+                        service_requests(sample, requests_to_service);
+                        // printf("servicing reqs\n");
+                        // for (size_t i=0; i<requests_to_service.size(); i++) {
+                        //     auto& req = requests_to_service[i];
+                        //     if (req->n_samples < req->result_data->size()) {
+                        //         req->result_data->push_back(sample);
+                        //     } else { // req is fulfilled and can be returned
+                        //         // idx_to_remove.push_back(i);
+                        //         auto req_to_move = std::move(requests_to_service[i]);
+                        //         data_queue.enqueue(std::move(req_to_move));
+                        //     }
+                        // }
+                        // 
+                        // // this can't be the right way to remove a set of stuff from a vector, can it?
+                        // bool run = true;
+                        // while (run) {
+                        //     run=false;
+                        //     for (size_t i=0; i<requests_to_service.size(); i++) {
+                        //         if (!requests_to_service[i]) {
+                        //             printf("removing req\n");
+                        //             requests_to_service.erase(requests_to_service.begin()+i);
+                        //             run=true;
+                        //             break;
+                        //         }
+                        //     } // for
+                        // } // while
                         continue;
 
                     case ParseResult::CONF_MISMATCH:
@@ -257,4 +293,85 @@ int SFOC::disconnect() {
 int SFOC::send_frame(Sample sample) {
     write_queue.enqueue(sample);
     return 0;
+}
+
+void SFOC::service_requests(Sample sample, std::vector<std::unique_ptr<DataReq>> &requests_to_service) {
+    
+    size_t sz = requests_to_service.size();
+    for (size_t i=0; i<sz; i++) {
+        auto& req = requests_to_service[i];
+        if (req->n_samples > req->result_data->size()) {
+            req->result_data->push_back(sample);
+        } else { // req is fulfilled and can be returned
+            // idx_to_remove.push_back(i);
+            auto req_to_move = std::move(requests_to_service[i]);
+            data_queue.enqueue(std::move(req_to_move));
+        }
+    }
+    
+    // this can't be the right way to remove a set of stuff from a vector, can it?
+    bool run = true;
+    while (run) {
+        run=false;
+        for (size_t i=0; i<requests_to_service.size(); i++) {
+            if (!requests_to_service[i]) {
+                printf("removing req\n");
+                requests_to_service.erase(requests_to_service.begin()+i);
+                run=true;
+                break;
+            }
+        } // for
+    } // while
+
+}
+
+uint64_t SFOC::req_data(size_t n_samples) {
+    // construct a (shared/unique ptr?) DataReq
+    // pass it by value to the req queue
+    //
+    // producer thread will remove it from the queue and add it to a list of reqs it's servicing
+    // producer will continue servicing reqs until they're completed
+    // producer will then pass the req and data back to main thread where it can be retrieved
+    //
+    // main thread will retrieve the data it's after from another function
+    if (n_samples == 0) return 0;
+    uint64_t req_handle = msg_id_cnt++; 
+    auto request = std::make_unique<DataReq>(DataReq());
+    request->req_type = DataReq::NUM;
+    request->n_samples = n_samples;
+    request->handle = req_handle; 
+    request_queue.enqueue(std::move(request));
+    return req_handle;
+}
+
+void SFOC::get_data_from_queue() {
+    while (data_queue.get_length() > 0) {
+        auto req = data_queue.try_dequeue();
+        if (req) {
+            completed_reqs.insert(std::make_pair(req->handle, std::move(req)));
+        }
+    }    
+}
+
+std::expected<std::unique_ptr<DataReq>, int> SFOC::get_req_data(uint64_t data_handle) {
+    // this function will attempt to retrieve the data for the supplied request handle
+    //
+    // (in a function call)
+    // first it removes all data in the producer return queue and puts it into 
+    // a map with it's handle as the key
+    //
+    // then it uses the supplied handle to check if there's a matching record in 
+    // the map. 
+    //      if not matching handle, return unexpected error 
+    //      if there is a matching handle, pop and return it
+    if (data_handle==0) return std::unexpected(-1);
+   
+    get_data_from_queue();
+
+    if (completed_reqs.find(data_handle) != completed_reqs.end()) {
+        auto req = std::move(completed_reqs[data_handle]);
+        completed_reqs.erase(data_handle);
+        return req;
+    }
+    return std::unexpected(-2);
 }

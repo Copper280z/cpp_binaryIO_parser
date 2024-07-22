@@ -11,7 +11,8 @@
 #include <unistd.h>
 #include <algorithm>
 
-#include "Parse.hpp"
+
+
 #include "SFOCInterface.hpp"
 #include "SimpleFOCRegisters.hpp"
 
@@ -60,7 +61,6 @@ int main(int argc, char **argv)
     if(input.cmdOptionExists("-h")){
         printf("Usage: \n");
         printf("-p SERIAL_PORT - ie /dev/ttyACM0 or /dev/cu.usbmodem[...]\n");
-        return 0;
     }
     const std::string &port = input.getCmdOption("-p");
     if (!port.empty()){
@@ -80,86 +80,18 @@ int main(int argc, char **argv)
     Number val;
     val.reg = SimpleFOCRegister::REG_TARGET;
     val.type = RegType::FLOAT;
-    val.f = 1.0;
+    val.f = 3.14;
+
     frame1.operands.push_back(val);
 
-    auto req_handle = sfoc.req_data(5000);
-    auto req_handle2 = sfoc.req_data(20000);
+    sfoc.send_frame(frame1);
+
+    std::this_thread::sleep_for(400ms);
+
+    frame1.operands[0].f = 0.0;
     sfoc.send_frame(frame1);
     
     std::this_thread::sleep_for(500ms);
     
-    frame1.operands[0].f=0;
-    sfoc.send_frame(frame1);
-
-    std::this_thread::sleep_for(1500ms);
-
-    auto data = sfoc.get_req_data(req_handle);
-    if (data) {
-        auto val = std::move(data.value());
-        printf("Got data back with %lu samples!\n",val->result_data->size());
-    } else {
-        printf("didn't get data, got error: %d\n",data.error());
-    }
-
-    data = sfoc.get_req_data(req_handle2);
-
-    if (data) {
-        auto val = std::move(data.value());
-        printf("Got data back with %lu samples!\n",val->result_data->size());
-
-        FILE* fd = fopen("plot.dat","w"); 
-        for (auto samp : *val->result_data) {
-            bool le = false;
-            for (auto num : samp.operands) {
-                switch (num.type) {
-                    case RegType::FLOAT:
-                        fprintf(fd, "%.3f ",num.f);
-                        le=true;
-                        break;
-                    case RegType::INT32:
-                    case RegType::UINT32:
-                    case RegType::UINT8:
-                        break;
-                
-                }
-            }
-            if (le) fprintf(fd, "\n");
-        }
-        fclose(fd);
-    } else {
-        printf("didn't get data, got error: %d\n",data.error());
-    }
     sfoc.disconnect();
-
 }
-    // frame1.operands[0].reg = SimpleFOCRegister::REG_CONTROL_MODE;
-    // frame1.operands[0].type = RegType::UINT8;
-    // frame1.operands[0].u8 = 0;
-    // sfoc.send_frame(frame1);
-    // std::this_thread::sleep_for(100ms);
-    // sfoc.send_frame(frame1);
-    // std::this_thread::sleep_for(100ms);
-    //
-    // frame1.operands[0].reg = SimpleFOCRegister::REG_TARGET;
-    // frame1.operands[0].type = RegType::FLOAT;
-    // for (int i=0;i<100;i++) {
-    //     frame1.operands[0].f = 0.05;
-    //     sfoc.send_frame(frame1);
-    //
-    //     std::this_thread::sleep_for(20ms);
-    //
-    //     frame1.operands[0].f = -0.05;
-    //     sfoc.send_frame(frame1);
-    //     std::this_thread::sleep_for(20ms);
-    // }
-    // 
-    // frame1.operands[0].reg = SimpleFOCRegister::REG_CONTROL_MODE;
-    // frame1.operands[0].type = RegType::UINT8;
-    // frame1.operands[0].u8 = 2;
-    // sfoc.send_frame(frame1);
-    
-    // std::this_thread::sleep_for(500ms);
-    // 
-    // sfoc.disconnect();
-//}
